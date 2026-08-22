@@ -1,0 +1,10 @@
+{
+  "source": {"source_id": "21-1_bk_03_000005", "consulting_summary": "해외송금 보류 문의"},
+  "consulting": {"consulting_topic": "해외송금", "consulting_summary": "보이스피싱 의심 해외송금 보류"},
+  "qa_data": {
+    "qa_id": "21-1_bk_03_000005_001",
+    "consulting_purpose": "해외송금 보류 사유 확인",
+    "input": {"question": "보이스피싱 의심으로 해외송금이 보류됐는데 바로 처리할 수 있나요?"},
+    "output": "본인확인과 이상거래 검토 결과를 확인한 뒤 안내드리겠습니다."
+  }
+}

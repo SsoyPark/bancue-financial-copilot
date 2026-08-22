@@ -1,0 +1,28 @@
+{
+  "source": {
+    "source_institution": "테스트은행",
+    "source_id": "21-1_bk_03_000001",
+    "source_date": "202506",
+    "client_gender": "여",
+    "client_age": "20~29세",
+    "consulting_content": "자동이체 조회 방법을 문의한 합성 테스트 상담입니다.",
+    "consulting_summary": "자동이체 조회 문의"
+  },
+  "consulting": {
+    "consulting_category": "은행",
+    "consulting_topic": "자동이체조회",
+    "consulting_summary": "자동이체 조회 문의"
+  },
+  "qa_data": {
+    "qa_id": "21-1_bk_03_000001_001",
+    "task_category": "일반상담",
+    "qa_topic": "자동이체조회",
+    "consulting_purpose": "자동이체 조회",
+    "input": {
+      "question": "연락처는 010-0000-0000입니다. 자동이체를 어디서 확인하나요?",
+      "answer": "메뉴에서 확인할 수 있습니다.",
+      "follow_up_question": "변경도 가능한가요?"
+    },
+    "output": "공식 메뉴를 확인하세요."
+  }
+}

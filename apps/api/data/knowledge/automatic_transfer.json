@@ -1,0 +1,16 @@
+{
+  "document_id": "KB-AUTO-001",
+  "title": "자동이체통합관리서비스 안내 기반 요약",
+  "section": "자동이체 조회·해지·출금계좌 변경",
+  "status": "Valid",
+  "effective_date": "2015-07-01",
+  "keywords": ["자동이체", "자동납부", "조회", "변경", "해지", "출금계좌"],
+  "content": "금융결제원 어카운트인포는 서비스 이용 동의와 본인인증 후 자동이체 내역을 조회하고, 원하는 자동이체를 해지하거나 다른 출금계좌로 변경 신청할 수 있다고 안내한다. 실제 처리 가능 시간과 결과는 서비스 화면에서 추가 확인해야 한다.",
+  "source_type": "official-public",
+  "source_organization": "금융결제원",
+  "source_url": "https://www.payinfo.or.kr/gatePay.html",
+  "source_published_at": "",
+  "verified_at": "2026-08-21",
+  "review_status": "Verified",
+  "summary_method": "official-source-summary"
+}

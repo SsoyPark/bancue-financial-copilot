@@ -1,0 +1,10 @@
+{
+  "source": {"source_id": "21-1_bk_03_000004", "consulting_summary": "대출 수수료 문의"},
+  "consulting": {"consulting_topic": "대출중도상환", "consulting_summary": "중도상환 수수료 산정 문의"},
+  "qa_data": {
+    "qa_id": "21-1_bk_03_000004_001",
+    "consulting_purpose": "중도상환 수수료 기준 확인",
+    "input": {"question": "대출 중도상환 수수료가 예상보다 많이 나온 이유가 궁금합니다."},
+    "output": "대출 약정과 상환 예정 금액을 확인한 뒤 안내드리겠습니다."
+  }
+}

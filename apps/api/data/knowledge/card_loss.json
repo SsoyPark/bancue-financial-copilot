@@ -1,0 +1,16 @@
+{
+  "document_id": "KB-CARD-001",
+  "title": "신용카드 분실·도난 대응 가이드 기반 요약",
+  "section": "분실 신고와 부정사용 확인",
+  "status": "Valid",
+  "effective_date": "2016-10-05",
+  "keywords": ["카드", "분실", "결제", "취소", "승인", "부정사용"],
+  "content": "여신금융협회 소비자 가이드는 카드 분실·도난 사실을 알게 되면 즉시 카드사에 신고하고 정상 접수 여부를 확인하도록 안내한다. 인지하지 못한 승인 건은 신고 시점과 이용 내역, 고객의 고의·과실 여부 등에 따라 처리 조건이 달라질 수 있으므로 카드사 확인이 필요하다.",
+  "source_type": "official-public",
+  "source_organization": "여신금융협회",
+  "source_url": "https://customer.crefia.or.kr/common/forward.xx?url=%2Fcustomer%2Fguard%2FguardCreditcardUseGuide6",
+  "source_published_at": "",
+  "verified_at": "2026-08-21",
+  "review_status": "Verified",
+  "summary_method": "official-source-summary"
+}

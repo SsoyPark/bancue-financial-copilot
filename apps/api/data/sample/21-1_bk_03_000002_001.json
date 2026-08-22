@@ -1,0 +1,10 @@
+{
+  "source": {"source_id": "21-1_bk_03_000002", "consulting_summary": "예금 만기 문의"},
+  "consulting": {"consulting_topic": "예금만기", "consulting_summary": "예금 만기와 자동연장 문의"},
+  "qa_data": {
+    "qa_id": "21-1_bk_03_000002_001",
+    "consulting_purpose": "예금 자동연장 조건 확인",
+    "input": {"question": "예금 만기일이 지나면 자동연장되나요?"},
+    "output": "상품명과 만기 옵션을 확인한 뒤 안내드리겠습니다."
+  }
+}

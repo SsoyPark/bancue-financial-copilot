@@ -1,0 +1,10 @@
+{
+  "source": {"source_id": "21-1_bk_03_000003", "consulting_summary": "카드 분실 문의"},
+  "consulting": {"consulting_topic": "카드분실", "consulting_summary": "분실 카드 결제 취소 문의"},
+  "qa_data": {
+    "qa_id": "21-1_bk_03_000003_001",
+    "consulting_purpose": "분실 카드 승인 건 확인",
+    "input": {"question": "카드를 분실했는데 방금 결제된 건을 취소할 수 있나요?"},
+    "output": "분실 신고 여부와 승인 내역을 확인한 뒤 안내드리겠습니다."
+  }
+}

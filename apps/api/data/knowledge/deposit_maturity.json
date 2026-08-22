@@ -1,0 +1,16 @@
+{
+  "document_id": "KB-DEPOSIT-001",
+  "title": "만기자금 자동재예치 특약 기반 요약",
+  "section": "자동재예치와 적용 금리 확인",
+  "status": "Valid",
+  "effective_date": "2026-03-30",
+  "keywords": ["예금", "만기", "자동연장", "재예치", "만기일"],
+  "content": "우리은행 자동재예치 특약은 재예치 시점의 고시 금리 등 특약에서 정한 조건을 적용한다고 안내한다. 자동재예치 가능 여부와 적용 조건은 상품별로 다를 수 있으므로 가입 상품, 만기일, 고객이 선택한 만기 옵션과 최신 특약을 확인해야 한다.",
+  "source_type": "official-public",
+  "source_organization": "우리은행",
+  "source_url": "https://spot.wooribank.com/pot/pot/mall/comm/download.jsp?PLM_ANX_SAVE_FILE_NM=PLM_P00XXXXXXX_A0197_20260330155556000223.pdf&PLM_ATFL_NM=%E3%80%8C%EB%A7%8C%EA%B8%B0%EC%9E%90%EA%B8%88+%EC%9E%90%EB%8F%99%EC%9E%AC%EC%98%88%EC%B9%98%E3%80%8D+%ED%8A%B9%EC%95%BD.pdf&PLM_BIZ_DSCD=00",
+  "source_published_at": "2026-03-30",
+  "verified_at": "2026-08-21",
+  "review_status": "Verified",
+  "summary_method": "official-source-summary"
+}

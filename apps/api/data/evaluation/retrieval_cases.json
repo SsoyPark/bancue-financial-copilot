@@ -1,0 +1,96 @@
+{
+  "version": "2.0",
+  "description": "공식 공개자료 요약 검색 및 무응답 판단용 정답셋",
+  "cases": [
+    {
+      "case_id": "RET-001",
+      "query": "자동이체를 어디서 조회하나요?",
+      "expected_document_ids": ["KB-AUTO-001"],
+      "description": "직접 표현: 자동이체 조회"
+    },
+    {
+      "case_id": "RET-002",
+      "query": "자동납부 출금계좌를 변경하고 싶어요.",
+      "expected_document_ids": ["KB-AUTO-001"],
+      "description": "관련 용어: 자동납부·출금계좌 변경"
+    },
+    {
+      "case_id": "RET-003",
+      "query": "예금 만기 후 자동연장 여부가 궁금합니다.",
+      "expected_document_ids": ["KB-DEPOSIT-001"],
+      "description": "직접 표현: 예금 만기"
+    },
+    {
+      "case_id": "RET-004",
+      "query": "만기 자금을 재예치할 수 있나요?",
+      "expected_document_ids": ["KB-DEPOSIT-001"],
+      "description": "관련 용어: 재예치"
+    },
+    {
+      "case_id": "RET-005",
+      "query": "카드를 잃어버렸는데 어떻게 해야 하나요?",
+      "expected_document_ids": ["KB-CARD-001"],
+      "description": "일상 표현: 카드를 잃어버림"
+    },
+    {
+      "case_id": "RET-006",
+      "query": "제가 하지 않은 결제 승인 내역이 있습니다.",
+      "expected_document_ids": ["KB-CARD-001"],
+      "description": "부정사용 가능성: 결제 승인"
+    },
+    {
+      "case_id": "RET-007",
+      "query": "대출 중도상환 해약금 계산 기준을 알려주세요.",
+      "expected_document_ids": ["KB-LOAN-001"],
+      "description": "직접 표현: 중도상환 해약금"
+    },
+    {
+      "case_id": "RET-008",
+      "query": "대출을 일찍 갚을 때 수수료가 있나요?",
+      "expected_document_ids": ["KB-LOAN-001"],
+      "description": "혼합 표현: 일찍 갚기·수수료"
+    },
+    {
+      "case_id": "RET-009",
+      "query": "해외로 송금하려는데 거래가 보류되었습니다.",
+      "expected_document_ids": ["KB-REMIT-001"],
+      "description": "직접 표현: 송금 보류"
+    },
+    {
+      "case_id": "RET-010",
+      "query": "매달 빠져나가는 금액을 다른 통장에서 나가게 하고 싶어요.",
+      "expected_document_ids": ["KB-AUTO-001"],
+      "description": "어려운 우회 표현: 자동이체 핵심어 없음"
+    },
+    {
+      "case_id": "NEG-001",
+      "query": "자동이체 서비스 개발을 위한 API 명세서를 작성하고 싶어요.",
+      "expected_document_ids": [],
+      "description": "범위 밖 질문: 자동이체 키워드는 있지만 개발 문의"
+    },
+    {
+      "case_id": "NEG-002",
+      "query": "카드 회사 신입 채용 절차와 면접 질문을 알려주세요.",
+      "expected_document_ids": [],
+      "description": "범위 밖 질문: 카드 키워드는 있지만 취업 문의"
+    },
+    {
+      "case_id": "NEG-003",
+      "query": "예금 상품 광고에 쓸 홍보 문구를 만들어 주세요.",
+      "expected_document_ids": [],
+      "description": "범위 밖 질문: 예금 키워드는 있지만 마케팅 문의"
+    },
+    {
+      "case_id": "NEG-004",
+      "query": "대출 관련 뉴스 기사의 제목을 추천해 주세요.",
+      "expected_document_ids": [],
+      "description": "범위 밖 질문: 대출 키워드는 있지만 기사 작성 문의"
+    },
+    {
+      "case_id": "NEG-005",
+      "query": "해외송금 회사에 취업하려면 어떤 자격증이 필요한가요?",
+      "expected_document_ids": [],
+      "description": "범위 밖 질문: 해외송금 키워드는 있지만 취업 문의"
+    }
+  ]
+}
