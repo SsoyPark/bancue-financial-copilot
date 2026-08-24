@@ -9,3 +9,6 @@ __pycache__/
 *.db
 *.db-shm
 *.db-wal
+*.duckdb
+*.parquet
+ingestion_report*.json
