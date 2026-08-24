@@ -12,3 +12,4 @@ __pycache__/
 *.duckdb
 *.parquet
 ingestion_report*.json
+data_profile*.json
