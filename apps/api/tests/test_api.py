@@ -18,11 +18,16 @@ def test_health() -> None:
     assert response.json()["query_expansion"] == "rules-v1"
     assert response.json()["retrieval_minimum_score"] == 8
     assert response.json()["explainability_engine"] == "retrieval-trace-v1"
-    assert response.json()["knowledge_count"] == 5
-    assert response.json()["official_knowledge_count"] == 5
+    assert response.json()["knowledge_count"] == 9
+    assert response.json()["official_knowledge_count"] == 9
     assert response.json()["synthetic_knowledge_count"] == 0
-    assert response.json()["knowledge_review_required_count"] == 0
+    assert response.json()["knowledge_review_required_count"] == 1
     assert response.json()["draft_engine"] == "grounded-template-v1"
+    assert response.json()["llm_engine"] == "gemini-rest-rag-v1"
+    assert response.json()["llm_model"]
+    assert response.json()["llm_configured"] in {0, 1}
+    assert response.json()["analysis_engine"] == "gemini-structured-triage-v1"
+    assert response.json()["quality_guardrail"] == "deterministic-guardrail-v1"
     assert response.json()["workflow_engine"] == "sqlite-v1"
     assert response.json()["persisted_state_count"] >= 0
     assert response.json()["feedback_engine"] == "sqlite-score-masked-v2"
@@ -60,9 +65,58 @@ def test_knowledge_source_registry_api() -> None:
     response = client.get("/api/knowledge/sources")
 
     assert response.status_code == 200
-    assert len(response.json()) == 5
-    assert all(item["review_status"] == "Verified" for item in response.json())
+    assert len(response.json()) == 9
+    assert sum(
+        item["review_status"] == "Review Required" for item in response.json()
+    ) == 1
     assert all(item["source_type"] == "official-public" for item in response.json())
+    loan_extension = next(
+        item
+        for item in response.json()
+        if item["document_id"] == "KB-LOAN-EXT-001"
+    )
+    assert "우리은행" in loan_extension["applicability_scope"]
+
+
+def test_llm_draft_endpoint_uses_safe_fallback_without_api_key(monkeypatch) -> None:
+    from app import main
+
+    class MissingKeyClient:
+        model = "gemini-test"
+        configured = False
+
+        def generate(self, system_instruction: str, prompt: str):
+            raise AssertionError("API 키가 없으면 호출하면 안 됩니다.")
+
+    monkeypatch.setattr(main, "GEMINI_CLIENT", MissingKeyClient())
+    consultation_id = client.get("/api/consultations").json()["items"][0]["id"]
+
+    response = client.post(f"/api/consultations/{consultation_id}/draft/llm")
+
+    assert response.status_code == 200
+    assert response.json()["draft_engine"] == "grounded-template-fallback-v1"
+    assert response.json()["draft_generated"] is True
+    assert response.json()["draft_source_ids"]
+
+
+def test_llm_analysis_endpoint_uses_safe_fallback_without_api_key(monkeypatch) -> None:
+    from app import main
+
+    class MissingKeyClient:
+        model = "gemini-test"
+        configured = False
+
+        def generate(self, system_instruction: str, prompt: str):
+            raise AssertionError("API 키가 없으면 호출하면 안 됩니다.")
+
+    monkeypatch.setattr(main, "GEMINI_CLIENT", MissingKeyClient())
+    consultation_id = client.get("/api/consultations").json()["items"][0]["id"]
+
+    response = client.post(f"/api/consultations/{consultation_id}/analysis/llm")
+
+    assert response.status_code == 200
+    assert response.json()["analysis_engine"] == "rules-fallback-v1"
+    assert response.json()["analysis_prompt_version"] == "triage-v1"
 
 
 def test_knowledge_search_abstains_when_confidence_is_low() -> None:

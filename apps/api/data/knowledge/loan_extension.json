@@ -1,0 +1,17 @@
+{
+  "document_id": "KB-LOAN-EXT-001",
+  "title": "우리은행 특정 신용대출 상품 기간연장 안내 기반 요약",
+  "section": "우리은행 해당 상품의 만기 전 연장 조건 확인",
+  "status": "Valid",
+  "effective_date": "",
+  "keywords": ["대출", "대출만기", "만기", "기간연장", "만기연장", "연장", "재약정", "상환", "신용대출"],
+  "content": "이 자료는 우리은행의 특정 신용대출 상품 페이지를 요약한 것으로 전체 은행이나 모든 대출 상품에 공통 적용되는 기준이 아니다. 해당 상품의 기간연장 가능 여부는 상품 조건과 심사 결과에 따라 달라질 수 있으므로 만기 전에 상품명, 신청 채널, 필요 서류, 적용 금리와 상환 조건을 우리은행에서 확인해야 한다.",
+  "source_type": "official-public",
+  "source_organization": "우리은행",
+  "source_url": "https://spot.wooribank.com/pot/Dream?PRD_CD=P020006140&withyou=POLON0060",
+  "source_published_at": "",
+  "verified_at": "2026-08-24",
+  "review_status": "Review Required",
+  "applicability_scope": "우리은행 상품코드 P020006140에 한정; 일반 은행 업무 근거로 사용 금지",
+  "summary_method": "official-source-summary"
+}

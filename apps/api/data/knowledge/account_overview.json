@@ -1,0 +1,16 @@
+{
+  "document_id": "KB-ACCOUNT-001",
+  "title": "어카운트인포 계좌통합관리서비스 안내 기반 요약",
+  "section": "계좌내역·잔고 조회와 잔고이전",
+  "status": "Valid",
+  "effective_date": "",
+  "keywords": ["계좌", "계좌조회", "계좌내역", "잔액", "잔고", "거래내역", "잔고이전", "해지"],
+  "content": "금융결제원 어카운트인포는 본인인증 후 여러 금융회사의 본인 명의 계좌와 잔고를 통합 조회하고, 대상 계좌를 선택해 잔고이전이나 해지를 신청할 수 있다고 안내한다. 개별 입출금 거래내역의 조회 범위와 제공 기간은 거래 은행의 앱·인터넷뱅킹·영업점 기준을 별도로 확인해야 한다.",
+  "source_type": "official-public",
+  "source_organization": "금융결제원",
+  "source_url": "https://www.payinfo.or.kr/gatePay.html",
+  "source_published_at": "",
+  "verified_at": "2026-08-24",
+  "review_status": "Verified",
+  "summary_method": "official-source-summary"
+}

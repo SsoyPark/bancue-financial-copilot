@@ -28,6 +28,11 @@ def apply_action(
             raise WorkflowError("Critical 또는 High 상담은 승인할 수 없으며 관리자 이관이 필요합니다.")
         if not consultation.draft_generated or not consultation.draft:
             raise WorkflowError("근거 기반 답변 초안이 없어 승인할 수 없습니다.")
+        if (
+            consultation.draft_quality is not None
+            and consultation.draft_quality.status != "Passed"
+        ):
+            raise WorkflowError("답변 품질 가드레일을 통과해야 승인할 수 있습니다.")
 
         confirmed = set(request.confirmed_checks)
         missing_checks = [

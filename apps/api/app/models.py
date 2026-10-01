@@ -108,6 +108,7 @@ class Evidence(BaseModel):
     source_published_at: str = ""
     verified_at: str = ""
     review_status: str = "Verified"
+    applicability_scope: str = ""
     summary_method: str = "synthetic"
     excerpt: str | None = None
 
@@ -131,6 +132,21 @@ class RetrievalTrace(BaseModel):
     candidates: list[RetrievalCandidateTrace] = Field(default_factory=list)
 
 
+class DraftQualityCheck(BaseModel):
+    check_id: str
+    label: str
+    passed: bool
+    detail: str
+
+
+class DraftQualityReport(BaseModel):
+    status: str
+    score: int = Field(ge=0, le=100)
+    checks: list[DraftQualityCheck] = Field(default_factory=list)
+    evaluated_at: str
+    evaluator: str = "deterministic-guardrail-v1"
+
+
 class Consultation(BaseModel):
     id: str
     customer: str
@@ -141,6 +157,12 @@ class Consultation(BaseModel):
     status: ConsultationStatus
     waiting_time: str
     intent: str
+    analysis_engine: str = "rules-v1"
+    analysis_model: str = ""
+    analysis_latency_ms: int | None = None
+    analysis_confidence: float | None = Field(default=None, ge=0, le=1)
+    analysis_prompt_version: str = "triage-v1"
+    analysis_rationale: list[str] = Field(default_factory=list)
     pii_masked: bool = False
     pii_types: list[str] = Field(default_factory=list)
     risk_reasons: list[str] = Field(default_factory=list)
@@ -152,6 +174,12 @@ class Consultation(BaseModel):
     draft_generated: bool = False
     draft_source_ids: list[str] = Field(default_factory=list)
     draft_notice: str | None = None
+    draft_engine: str = ""
+    draft_model: str = ""
+    draft_latency_ms: int | None = None
+    draft_fallback_reason: str | None = None
+    draft_prompt_version: str = "grounded-draft-v2"
+    draft_quality: DraftQualityReport | None = None
     restriction_reason: str | None = None
     action_history: list[ActionRecord] = Field(default_factory=list)
 
