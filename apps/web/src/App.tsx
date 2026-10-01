@@ -73,6 +73,32 @@ function App() {
     return payload as FeedbackRecord
   }
 
+  const handleGenerateDraft = async (consultationId: string) => {
+    if (apiState !== 'connected') throw new Error('API 연결 상태에서만 AI 초안을 생성할 수 있습니다.')
+    const response = await fetch(`/api/consultations/${consultationId}/draft/llm`, {
+      method: 'POST',
+    })
+    const payload = await response.json()
+    if (!response.ok) throw new Error(typeof payload.detail === 'string' ? payload.detail : 'AI 초안 생성에 실패했습니다.')
+    const updated = payload as Consultation
+    setConsultations((items) => items.map((item) => item.id === updated.id ? updated : item))
+    setSelected(updated)
+    return updated
+  }
+
+  const handleAnalyze = async (consultationId: string) => {
+    if (apiState !== 'connected') throw new Error('API 연결 상태에서만 AI 분석을 실행할 수 있습니다.')
+    const response = await fetch(`/api/consultations/${consultationId}/analysis/llm`, {
+      method: 'POST',
+    })
+    const payload = await response.json()
+    if (!response.ok) throw new Error(typeof payload.detail === 'string' ? payload.detail : 'AI 상담 분석에 실패했습니다.')
+    const updated = payload as Consultation
+    setConsultations((items) => items.map((item) => item.id === updated.id ? updated : item))
+    setSelected(updated)
+    return updated
+  }
+
   return (
     <div className="app-shell">
       <header className="topbar">
@@ -95,7 +121,7 @@ function App() {
         ) : view === 'knowledge' ? (
           <KnowledgeDashboard />
         ) : selected ? (
-          <Workspace consultation={selected} onBack={() => setSelected(null)} onAction={handleAction} onFeedback={handleFeedback} />
+          <Workspace consultation={selected} onBack={() => setSelected(null)} onAction={handleAction} onFeedback={handleFeedback} onGenerateDraft={handleGenerateDraft} onAnalyze={handleAnalyze} />
         ) : (
           <>
             <section className="page-heading">
@@ -134,7 +160,7 @@ function App() {
   )
 }
 
-function Workspace({ consultation, onBack, onAction, onFeedback }: { consultation: Consultation; onBack: () => void; onAction: (id: string, action: WorkflowAction, checks: string[]) => Promise<Consultation>; onFeedback: (id: string, feedback: FeedbackRequest) => Promise<FeedbackRecord> }) {
+function Workspace({ consultation, onBack, onAction, onFeedback, onGenerateDraft, onAnalyze }: { consultation: Consultation; onBack: () => void; onAction: (id: string, action: WorkflowAction, checks: string[]) => Promise<Consultation>; onFeedback: (id: string, feedback: FeedbackRequest) => Promise<FeedbackRecord>; onGenerateDraft: (id: string) => Promise<Consultation>; onAnalyze: (id: string) => Promise<Consultation> }) {
   const restricted = consultation.risk === 'Critical' || consultation.risk === 'High'
   const completed = consultation.status === 'Completed'
   const [checkedItems, setCheckedItems] = useState<string[]>([])
@@ -147,7 +173,12 @@ function Workspace({ consultation, onBack, onAction, onFeedback }: { consultatio
   const [feedbackNote, setFeedbackNote] = useState('')
   const [feedbackState, setFeedbackState] = useState<'idle' | 'saving'>('idle')
   const [feedbackMessage, setFeedbackMessage] = useState('')
+  const [llmState, setLlmState] = useState<'idle' | 'generating'>('idle')
+  const [llmMessage, setLlmMessage] = useState('')
+  const [analysisState, setAnalysisState] = useState<'idle' | 'analyzing'>('idle')
+  const [analysisMessage, setAnalysisMessage] = useState('')
   const allChecksDone = consultation.required_checks.every((item) => checkedItems.includes(item))
+  const qualityPassed = consultation.draft_quality?.status === 'Passed'
 
   useEffect(() => {
     setCheckedItems([])
@@ -158,6 +189,10 @@ function Workspace({ consultation, onBack, onAction, onFeedback }: { consultatio
     setFeedbackIssue('wrong_evidence')
     setFeedbackNote('')
     setFeedbackMessage('')
+    setLlmState('idle')
+    setLlmMessage('')
+    setAnalysisState('idle')
+    setAnalysisMessage('')
   }, [consultation.id])
 
   const toggleCheck = (item: string) => {
@@ -198,6 +233,32 @@ function Workspace({ consultation, onBack, onAction, onFeedback }: { consultatio
     }
   }
 
+  const generateAiDraft = async () => {
+    setLlmState('generating')
+    setLlmMessage('')
+    try {
+      const updated = await onGenerateDraft(consultation.id)
+      setLlmMessage(updated.draft_fallback_reason ? 'Gemini 호출 대신 안전한 템플릿 초안을 사용했습니다.' : 'Gemini 근거 기반 초안을 생성했습니다.')
+    } catch (error) {
+      setLlmMessage(error instanceof Error ? error.message : 'AI 초안 생성에 실패했습니다.')
+    } finally {
+      setLlmState('idle')
+    }
+  }
+
+  const runAiAnalysis = async () => {
+    setAnalysisState('analyzing')
+    setAnalysisMessage('')
+    try {
+      const updated = await onAnalyze(consultation.id)
+      setAnalysisMessage(updated.analysis_engine === 'gemini-structured-triage-v1' ? 'Gemini가 상담 의도·위험도·필수 확인 항목을 구조화했습니다.' : 'Gemini 분석 대신 기존 규칙 결과를 유지했습니다.')
+    } catch (error) {
+      setAnalysisMessage(error instanceof Error ? error.message : 'AI 상담 분석에 실패했습니다.')
+    } finally {
+      setAnalysisState('idle')
+    }
+  }
+
   return <>
     <section className="workspace-heading">
       <button className="back" onClick={onBack}>← 상담 목록</button>
@@ -209,7 +270,9 @@ function Workspace({ consultation, onBack, onAction, onFeedback }: { consultatio
       <article className="panel analysis-panel">
         <PanelTitle title="AI 분석" subtitle="핵심 판단과 필수 확인" />
         <div className="analysis-summary"><Info label="의도" value={consultation.intent} /><Info label="위험도" value={`${consultation.risk} · ${riskLabels[consultation.risk]}`} /><Info label="처리 상태" value={consultation.status} /></div>
-        <div className="reason-list"><b>판정 이유</b>{consultation.risk_reasons.map((reason) => <p key={reason}>• {reason}</p>)}<span>{consultation.rule_ids.join(' · ')}</span></div>
+        <div className="analysis-controls"><button className="secondary" disabled={completed || analysisState === 'analyzing'} onClick={runAiAnalysis}>{analysisState === 'analyzing' ? 'Gemini 분석 중…' : 'Gemini로 상담 재분석'}</button><span>{consultation.analysis_engine ?? 'rules-v1'}{consultation.analysis_model ? ` · ${consultation.analysis_model}` : ''}{consultation.analysis_latency_ms != null ? ` · ${consultation.analysis_latency_ms}ms` : ''}</span></div>
+        {analysisMessage ? <div className="action-message">{analysisMessage}</div> : null}
+        <div className="reason-list"><b>판정 이유</b>{(consultation.analysis_rationale?.length ? consultation.analysis_rationale : consultation.risk_reasons).map((reason) => <p key={reason}>• {reason}</p>)}<span>{consultation.analysis_prompt_version ?? 'triage-v1'}{consultation.analysis_confidence != null ? ` · 신뢰도 ${Math.round(consultation.analysis_confidence * 100)}%` : ''} · {consultation.rule_ids.join(' · ')}</span></div>
         <div className="check-list"><b>필수 확인 항목</b>{consultation.required_checks.map((item) => <label key={item}><input type="checkbox" checked={checkedItems.includes(item)} disabled={completed} onChange={() => toggleCheck(item)} /> {item}</label>)}</div>
         {consultation.restriction_reason && <div className="warning"><b>자동 답변 제한</b><p>{consultation.restriction_reason}</p></div>}
         {consultation.retrieval_trace ? <details className="analysis-details"><summary>검색 판단 상세</summary><TraceSummary trace={consultation.retrieval_trace} compact /></details> : null}
@@ -231,9 +294,12 @@ function Workspace({ consultation, onBack, onAction, onFeedback }: { consultatio
             </div>
           ))}</details> : <div className="warning"><b>연결된 검증 근거 없음</b><p>{consultation.retrieval_trace?.reason ?? '답변 초안을 생성하지 않고 추가 정보 요청 또는 이관이 필요합니다.'}</p></div>}
           <div className={`draft-status ${consultation.draft_generated ? 'ready' : 'blocked'}`}><b>{consultation.draft_generated ? '초안 생성 완료' : '초안 생성 차단'}</b><p>{consultation.draft_notice}</p>{consultation.draft_source_ids.length ? <span>사용 근거: {consultation.draft_source_ids.join(' · ')}</span> : null}</div>
+          <div className="llm-controls"><button className="primary" disabled={!consultation.evidence.length || completed || llmState === 'generating'} onClick={generateAiDraft}>{llmState === 'generating' ? 'Gemini 생성 중…' : 'Gemini로 근거 초안 생성'}</button>{consultation.draft_engine ? <span>{consultation.draft_engine}{consultation.draft_model ? ` · ${consultation.draft_model}` : ''}{consultation.draft_latency_ms != null ? ` · ${consultation.draft_latency_ms}ms` : ''}</span> : null}</div>
+          {llmMessage ? <div className="action-message">{llmMessage}</div> : null}
+          {consultation.draft_quality ? <details className={`quality-guardrail ${qualityPassed ? 'passed' : 'review'}`} open={!qualityPassed}><summary><span>답변 품질 가드레일</span><b>{consultation.draft_quality.score}점 · {qualityPassed ? '통과' : '검토 필요'}</b></summary><div className="quality-checks">{consultation.draft_quality.checks.map((check) => <div key={check.check_id} className={check.passed ? 'pass' : 'fail'}><b>{check.passed ? '✓' : '!'} {check.label}</b><span>{check.detail}</span></div>)}</div><small>{consultation.draft_prompt_version ?? 'grounded-draft-v2'} · {consultation.draft_quality.evaluator}</small></details> : null}
           <textarea className="draft" value={consultation.draft ?? ''} readOnly placeholder="유효한 근거가 연결되면 초안이 생성됩니다." />
           {actionMessage ? <div className="action-message">{actionMessage}</div> : null}
-          <div className="action-bar"><button className="secondary" disabled={completed || actionState === 'saving'} onClick={() => runAction('reject')}>반려</button>{restricted ? <button className="primary danger" disabled={completed || actionState === 'saving'} onClick={() => runAction('escalate')}>관리자 이관</button> : <><button className="secondary" disabled={completed || actionState === 'saving'} onClick={() => runAction('escalate')}>관리자 이관</button><button className="primary" disabled={completed || actionState === 'saving' || !consultation.draft_generated || !allChecksDone} onClick={() => runAction('approve')}>승인</button></>}</div>
+          <div className="action-bar"><button className="secondary" disabled={completed || actionState === 'saving'} onClick={() => runAction('reject')}>반려</button>{restricted ? <button className="primary danger" disabled={completed || actionState === 'saving'} onClick={() => runAction('escalate')}>관리자 이관</button> : <><button className="secondary" disabled={completed || actionState === 'saving'} onClick={() => runAction('escalate')}>관리자 이관</button><button className="primary" disabled={completed || actionState === 'saving' || !consultation.draft_generated || !allChecksDone || !qualityPassed} onClick={() => runAction('approve')}>승인</button></>}</div>
         </> : <div className="feedback-box score-feedback">
           <div><b>상담사 품질 피드백</b><span>항목별로 평가하면 어떤 기능을 개선해야 하는지 구분할 수 있습니다.</span></div>
           <ScoreSelector label="의도 파악이 정확한가요?" value={intentScore} onChange={setIntentScore} />

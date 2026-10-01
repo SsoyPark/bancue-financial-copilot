@@ -1,6 +1,10 @@
 import json
 
-from app.repository import load_aihub_directory, parse_aihub_consultation
+from app.repository import (
+    load_aihub_directory,
+    parse_aihub_consultation,
+    parse_aihub_consultations,
+)
 
 
 def sample_payload() -> dict:
@@ -24,6 +28,21 @@ def test_parse_aihub_consultation() -> None:
     assert consultation.question == "자동이체를 어디서 확인하나요?"
 
 
+def test_parse_aihub_qa_list_into_separate_consultations() -> None:
+    item = sample_payload()
+    second_qa = dict(item["qa_data"])
+    second_qa["qa_id"] = "qa-2"
+    second_qa["input"] = {"question": "자동이체를 변경하고 싶어요."}
+    second_qa["output"] = "변경 메뉴를 확인하세요."
+    item["qa_data"] = [item["qa_data"], second_qa]
+
+    consultations = parse_aihub_consultations(item, "fallback")
+
+    assert [consultation.id for consultation in consultations] == ["qa-1", "qa-2"]
+    assert consultations[1].question == "자동이체를 변경하고 싶어요."
+    assert consultations[1].draft == "변경 메뉴를 확인하세요."
+
+
 def test_load_directory_skips_invalid_and_duplicate_files(tmp_path) -> None:
     (tmp_path / "valid.json").write_text(
         json.dumps(sample_payload(), ensure_ascii=False), encoding="utf-8"
@@ -37,4 +56,3 @@ def test_load_directory_skips_invalid_and_duplicate_files(tmp_path) -> None:
     assert result.loaded_files == 1
     assert result.skipped_files == 2
     assert result.items[0].id == "qa-1"
-

@@ -25,6 +25,7 @@ export interface Evidence {
   source_published_at?: string
   verified_at?: string
   review_status?: string
+  applicability_scope?: string
   summary_method?: string
   excerpt?: string | null
 }
@@ -56,6 +57,21 @@ export interface RetrievalTrace {
   candidates: RetrievalCandidateTrace[]
 }
 
+export interface DraftQualityCheck {
+  check_id: string
+  label: string
+  passed: boolean
+  detail: string
+}
+
+export interface DraftQualityReport {
+  status: 'Passed' | 'Review Required'
+  score: number
+  checks: DraftQualityCheck[]
+  evaluated_at: string
+  evaluator: string
+}
+
 export interface Consultation {
   id: string
   customer: string
@@ -66,6 +82,12 @@ export interface Consultation {
   status: ConsultationStatus
   waiting_time: string
   intent: string
+  analysis_engine?: string
+  analysis_model?: string
+  analysis_latency_ms?: number | null
+  analysis_confidence?: number | null
+  analysis_prompt_version?: string
+  analysis_rationale?: string[]
   pii_masked: boolean
   pii_types: string[]
   risk_reasons: string[]
@@ -77,6 +99,12 @@ export interface Consultation {
   draft_generated: boolean
   draft_source_ids: string[]
   draft_notice: string | null
+  draft_engine?: string
+  draft_model?: string
+  draft_latency_ms?: number | null
+  draft_fallback_reason?: string | null
+  draft_prompt_version?: string
+  draft_quality?: DraftQualityReport | null
   restriction_reason: string | null
   action_history: ActionRecord[]
 }

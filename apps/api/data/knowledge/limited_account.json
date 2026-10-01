@@ -1,0 +1,16 @@
+{
+  "document_id": "KB-LIMIT-001",
+  "title": "한도제한계좌 거래한도 개선 안내 기반 요약",
+  "section": "거래한도와 한도 해제 증빙 확인",
+  "status": "Valid",
+  "effective_date": "2024-05-02",
+  "keywords": ["한도제한계좌", "비대면한도계좌", "이체한도", "출금한도", "ATM", "창구", "한도해제", "증빙서류", "금융거래목적"],
+  "content": "금융위원회는 2024년 5월 2일부터 은행권 한도제한계좌의 일일 한도를 인터넷뱅킹·ATM 100만원, 창구 300만원으로 상향했다고 안내한다. 한도 해제에는 금융거래 목적을 확인할 수 있는 자료가 필요하고, 대표 증빙 외 추가 자료나 은행별 기준이 적용될 수 있으므로 거래 은행의 최신 안내를 확인해야 한다.",
+  "source_type": "official-public",
+  "source_organization": "금융위원회",
+  "source_url": "https://www.fsc.go.kr/no010101/82205",
+  "source_published_at": "2024-05-02",
+  "verified_at": "2026-08-24",
+  "review_status": "Verified",
+  "summary_method": "official-source-summary"
+}

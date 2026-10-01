@@ -28,7 +28,11 @@ class KnowledgeDocument:
     source_published_at: str = ""
     verified_at: str = ""
     review_status: str = "Verified"
+    applicability_scope: str = ""
     summary_method: str = "synthetic"
+    parent_document_id: str = ""
+    chunk_index: int = 1
+    chunk_count: int = 1
 
 
 @dataclass(frozen=True)
@@ -63,8 +67,9 @@ def _parse_document(payload: dict[str, Any], fallback_id: str) -> KnowledgeDocum
     if not isinstance(keywords, list):
         raise ValueError("keywords must be a list")
 
+    document_id = _string(payload.get("document_id"), fallback_id)
     document = KnowledgeDocument(
-        document_id=_string(payload.get("document_id"), fallback_id),
+        document_id=document_id,
         title=_string(payload.get("title")),
         section=_string(payload.get("section")),
         status=_string(payload.get("status"), "Valid"),
@@ -77,7 +82,11 @@ def _parse_document(payload: dict[str, Any], fallback_id: str) -> KnowledgeDocum
         source_published_at=_string(payload.get("source_published_at")),
         verified_at=_string(payload.get("verified_at")),
         review_status=_string(payload.get("review_status"), "Verified"),
+        applicability_scope=_string(payload.get("applicability_scope")),
         summary_method=_string(payload.get("summary_method"), "synthetic"),
+        parent_document_id=_string(payload.get("parent_document_id"), document_id),
+        chunk_index=int(payload.get("chunk_index", 1)),
+        chunk_count=int(payload.get("chunk_count", 1)),
     )
     if not document.title or not document.section or not document.content:
         raise ValueError("required knowledge fields are missing")
@@ -87,6 +96,101 @@ def _parse_document(payload: dict[str, Any], fallback_id: str) -> KnowledgeDocum
         if not document.source_url.startswith("https://"):
             raise ValueError("official source URL must use HTTPS")
     return document
+
+
+def split_knowledge_text(
+    text: str,
+    max_chars: int = 500,
+    overlap_chars: int = 80,
+) -> list[str]:
+    """문장 경계를 우선해 긴 근거를 겹치는 문자 구간으로 분할한다."""
+    if max_chars < 100:
+        raise ValueError("max_chars must be at least 100")
+    if overlap_chars < 0 or overlap_chars >= max_chars:
+        raise ValueError("overlap_chars must be between 0 and max_chars - 1")
+    normalized = " ".join(text.split())
+    if not normalized:
+        return []
+    if len(normalized) <= max_chars:
+        return [normalized]
+
+    chunks: list[str] = []
+    start = 0
+    while start < len(normalized):
+        end = min(start + max_chars, len(normalized))
+        if end < len(normalized):
+            boundary = max(
+                normalized.rfind(". ", start + max_chars // 2, end),
+                normalized.rfind("? ", start + max_chars // 2, end),
+                normalized.rfind("! ", start + max_chars // 2, end),
+            )
+            if boundary >= 0:
+                end = boundary + 1
+        chunk = normalized[start:end].strip()
+        if chunk:
+            chunks.append(chunk)
+        if end >= len(normalized):
+            break
+        next_start = max(end - overlap_chars, start + 1)
+        while next_start < len(normalized) and normalized[next_start].isspace():
+            next_start += 1
+        start = next_start
+    return chunks
+
+
+def chunk_knowledge_document(
+    document: KnowledgeDocument,
+    max_chars: int = 500,
+    overlap_chars: int = 80,
+) -> list[KnowledgeDocument]:
+    chunks = split_knowledge_text(
+        document.content,
+        max_chars=max_chars,
+        overlap_chars=overlap_chars,
+    )
+    if len(chunks) <= 1:
+        return [
+            KnowledgeDocument(
+                **{
+                    **document.__dict__,
+                    "parent_document_id": document.parent_document_id
+                    or document.document_id,
+                    "chunk_index": 1,
+                    "chunk_count": 1,
+                }
+            )
+        ]
+
+    return [
+        KnowledgeDocument(
+            **{
+                **document.__dict__,
+                "document_id": f"{document.document_id}#chunk-{index:03d}",
+                "parent_document_id": document.parent_document_id
+                or document.document_id,
+                "chunk_index": index,
+                "chunk_count": len(chunks),
+                "content": chunk,
+            }
+        )
+        for index, chunk in enumerate(chunks, start=1)
+    ]
+
+
+def chunk_knowledge_documents(
+    documents: list[KnowledgeDocument],
+    max_chars: int = 500,
+    overlap_chars: int = 80,
+) -> list[KnowledgeDocument]:
+    return [
+        chunk
+        for document in documents
+        for chunk in chunk_knowledge_document(
+            document,
+            max_chars=max_chars,
+            overlap_chars=overlap_chars,
+        )
+    ]
 
 
 def load_knowledge_directory(data_dir: Path) -> KnowledgeLoadResult:
@@ -288,6 +392,7 @@ def evidence_from_match(match: KnowledgeMatch) -> Evidence:
         source_published_at=document.source_published_at,
         verified_at=document.verified_at,
         review_status=document.review_status,
+        applicability_scope=document.applicability_scope,
         summary_method=document.summary_method,
         excerpt=document.content,
     )
@@ -308,6 +413,7 @@ def source_registry(documents: list[KnowledgeDocument]) -> list[dict[str, str]]:
             "source_published_at": document.source_published_at,
             "verified_at": document.verified_at,
             "review_status": document.review_status,
+            "applicability_scope": document.applicability_scope,
             "summary_method": document.summary_method,
         }
         for document in sorted(documents, key=lambda item: item.document_id)

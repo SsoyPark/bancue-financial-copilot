@@ -6,6 +6,7 @@ from app.models import (
     ConsultationStatus,
     RiskLevel,
     WorkflowAction,
+    DraftQualityReport,
 )
 from app.workflow import WorkflowError, apply_action
 
@@ -62,6 +63,25 @@ def test_high_risk_cannot_be_approved() -> None:
     with pytest.raises(WorkflowError, match="관리자 이관"):
         apply_action(
             consultation(risk=RiskLevel.HIGH),
+            request(WorkflowAction.APPROVE, ["본인확인", "근거 문서 유효일 확인"]),
+        )
+
+
+def test_approve_requires_quality_guardrail_pass() -> None:
+    item = consultation().model_copy(
+        update={
+            "draft_quality": DraftQualityReport(
+                status="Review Required",
+                score=83,
+                checks=[],
+                evaluated_at="2026-08-29T00:00:00+00:00",
+            )
+        }
+    )
+
+    with pytest.raises(WorkflowError, match="품질 가드레일"):
+        apply_action(
+            item,
             request(WorkflowAction.APPROVE, ["본인확인", "근거 문서 유효일 확인"]),
         )
 

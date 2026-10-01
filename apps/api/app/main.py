@@ -4,9 +4,11 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 
+from .ai_analysis import analyze_consultation_with_llm
 from .database import WorkflowStateStore
-from .draft import generate_grounded_draft
+from .draft import generate_grounded_draft, generate_llm_grounded_draft
 from .evaluation import (
     RetrievalEvaluation,
     RetrievalEvaluationComparison,
@@ -22,6 +24,7 @@ from .knowledge import (
     search_knowledge,
     source_registry,
 )
+from .llm import GeminiClient
 from .models import (
     ActionRequest,
     Consultation,
@@ -41,6 +44,7 @@ from .workflow import WorkflowError, apply_action
 
 
 DEFAULT_DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "sample"
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 DEFAULT_KNOWLEDGE_DIR = Path(__file__).resolve().parents[1] / "data" / "knowledge"
 DEFAULT_STATE_DB = Path(__file__).resolve().parents[1] / "data" / "runtime" / "bancue.db"
 DEFAULT_EVALUATION_FILE = (
@@ -60,6 +64,7 @@ RETRIEVAL_CASES = load_retrieval_cases(EVALUATION_FILE)
 RAW_CONSULTATIONS = LOAD_RESULT.items or CONSULTATIONS
 MASKED_CONSULTATIONS = [sanitize_consultation(item) for item in RAW_CONSULTATIONS]
 STATE_STORE = WorkflowStateStore(STATE_DB_PATH)
+GEMINI_CLIENT = GeminiClient.from_env()
 GENERATED_CONSULTATIONS = [
     generate_grounded_draft(
         attach_evidence(assess_risk(item), KNOWLEDGE_RESULT.documents)
@@ -101,6 +106,11 @@ def health() -> dict[str, str | int]:
         "synthetic_knowledge_count": KNOWLEDGE_RESULT.synthetic_documents,
         "knowledge_review_required_count": KNOWLEDGE_RESULT.review_required_documents,
         "draft_engine": "grounded-template-v1",
+        "llm_engine": "gemini-rest-rag-v1",
+        "llm_model": GEMINI_CLIENT.model,
+        "llm_configured": int(GEMINI_CLIENT.configured),
+        "analysis_engine": "gemini-structured-triage-v1",
+        "quality_guardrail": "deterministic-guardrail-v1",
         "workflow_engine": "sqlite-v1",
         "persisted_state_count": STATE_STORE.count(),
         "feedback_engine": "sqlite-score-masked-v2",
@@ -137,6 +147,55 @@ def get_consultation(consultation_id: str) -> Consultation:
     if consultation is None:
         raise HTTPException(status_code=404, detail="Consultation not found")
     return consultation
+
+
+@app.post(
+    "/api/consultations/{consultation_id}/draft/llm",
+    response_model=Consultation,
+)
+def generate_consultation_llm_draft(consultation_id: str) -> Consultation:
+    index = next(
+        (
+            index
+            for index, item in enumerate(ACTIVE_CONSULTATIONS)
+            if item.id == consultation_id
+        ),
+        None,
+    )
+    if index is None:
+        raise HTTPException(status_code=404, detail="Consultation not found")
+
+    masked = sanitize_consultation(ACTIVE_CONSULTATIONS[index])
+    updated = generate_llm_grounded_draft(masked, GEMINI_CLIENT)
+    ACTIVE_CONSULTATIONS[index] = updated
+    return updated
+
+
+@app.post(
+    "/api/consultations/{consultation_id}/analysis/llm",
+    response_model=Consultation,
+)
+def analyze_consultation_llm(consultation_id: str) -> Consultation:
+    index = next(
+        (
+            index
+            for index, item in enumerate(ACTIVE_CONSULTATIONS)
+            if item.id == consultation_id
+        ),
+        None,
+    )
+    if index is None:
+        raise HTTPException(status_code=404, detail="Consultation not found")
+
+    analyzed = analyze_consultation_with_llm(
+        ACTIVE_CONSULTATIONS[index],
+        GEMINI_CLIENT,
+    )
+    refreshed = generate_grounded_draft(
+        attach_evidence(analyzed, KNOWLEDGE_RESULT.documents)
+    )
+    ACTIVE_CONSULTATIONS[index] = refreshed
+    return refreshed
 
 
 @app.post("/api/consultations/{consultation_id}/actions", response_model=Consultation)

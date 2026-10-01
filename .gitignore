@@ -9,3 +9,10 @@ __pycache__/
 *.db
 *.db-shm
 *.db-wal
+*.duckdb
+*.parquet
+ingestion_report*.json
+data_profile*.json
+*.tsbuildinfo
+apps/web/vite.config.js
+apps/web/vite.config.d.ts

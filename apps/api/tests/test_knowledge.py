@@ -2,7 +2,9 @@ import json
 from pathlib import Path
 
 from app.knowledge import (
+    KnowledgeDocument,
     attach_evidence,
+    chunk_knowledge_document,
     explain_knowledge_search,
     load_knowledge_directory,
     search_knowledge,
@@ -203,14 +205,67 @@ def test_loads_official_source_metadata() -> None:
     data_dir = Path(__file__).resolve().parents[1] / "data" / "knowledge"
     result = load_knowledge_directory(data_dir)
 
-    assert result.loaded_files == 5
-    assert result.official_documents == 5
+    assert result.loaded_files == 9
+    assert result.official_documents == 9
     assert result.synthetic_documents == 0
-    assert result.review_required_documents == 0
+    assert result.review_required_documents == 1
     registry = source_registry(result.documents)
     assert registry[0]["source_type"] == "official-public"
     assert registry[0]["source_url"].startswith("https://")
-    assert registry[0]["verified_at"] == "2026-08-21"
+    assert all(item["verified_at"] for item in registry)
+    loan_extension = next(
+        item for item in registry if item["document_id"] == "KB-LOAN-EXT-001"
+    )
+    assert loan_extension["review_status"] == "Review Required"
+    assert "우리은행" in loan_extension["applicability_scope"]
+
+
+def test_searches_expanded_official_topics() -> None:
+    data_dir = Path(__file__).resolve().parents[1] / "data" / "knowledge"
+    documents = load_knowledge_directory(data_dir).documents
+
+    cases = {
+        "한도제한계좌 해제 증빙서류가 궁금해요.": "KB-LIMIT-001",
+        "대출 연체이자 금액을 확인하고 싶어요.": "KB-LOAN-ARREARS-001",
+        "다른 은행 계좌 잔액을 조회하고 싶어요.": "KB-ACCOUNT-001",
+    }
+
+    for query, expected_document_id in cases.items():
+        matches = search_knowledge(query, documents)
+        assert matches[0].document.document_id == expected_document_id
+
+
+def test_excludes_product_specific_loan_extension_pending_review() -> None:
+    data_dir = Path(__file__).resolve().parents[1] / "data" / "knowledge"
+    documents = load_knowledge_directory(data_dir).documents
+
+    matches = search_knowledge("신용대출 만기연장 조건을 알려주세요.", documents)
+
+    assert all(
+        match.document.document_id != "KB-LOAN-EXT-001" for match in matches
+    )
+
+
+def test_chunks_long_document_with_parent_metadata() -> None:
+    document = KnowledgeDocument(
+        document_id="KB-LONG-001",
+        title="긴 지침",
+        section="테스트",
+        status="Valid",
+        effective_date="2026-01-01",
+        keywords=("대출", "연장"),
+        content=" ".join([f"대출 연장 확인 문장 {index}." for index in range(80)]),
+    )
+
+    chunks = chunk_knowledge_document(document, max_chars=300, overlap_chars=50)
+
+    assert len(chunks) > 1
+    assert all(len(chunk.content) <= 300 for chunk in chunks)
+    assert all(chunk.parent_document_id == "KB-LONG-001" for chunk in chunks)
+    assert [chunk.chunk_index for chunk in chunks] == list(
+        range(1, len(chunks) + 1)
+    )
+    assert all(chunk.chunk_count == len(chunks) for chunk in chunks)
 
 
 def test_skips_official_document_without_source_url(tmp_path) -> None:
